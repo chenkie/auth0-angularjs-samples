@@ -6,18 +6,26 @@
     .module('app')
     .service('authService', authService);
 
-  authService.$inject = ['$state', 'angularAuth0', '$timeout'];
+  authService.$inject = ['$state', '$timeout'];
 
-  function authService($state, angularAuth0, $timeout) {
+  function authService($state, $timeout) {
+
+    var webAuth = new auth0.WebAuth({
+      clientID: AUTH0_CLIENT_ID,
+      domain: AUTH0_DOMAIN,
+      redirectUri: AUTH0_CALLBACK_URL,
+      responseType: 'token id_token',
+      scope: 'openid profile'
+    });
 
     var userProfile;
 
     function login() {
-      angularAuth0.authorize();
+      webAuth.authorize();
     }
     
     function handleAuthentication() {
-      angularAuth0.parseHash(function(err, authResult) {
+      webAuth.parseHash(function(err, authResult) {
         if (authResult && authResult.idToken) {
           setSession(authResult);
           $state.go('home');
@@ -36,7 +44,7 @@
       if (!accessToken) {
         throw new Error('Access token must exist to fetch profile');
       }
-      angularAuth0.client.userInfo(accessToken, function(err, profile) {
+      webAuth.client.userInfo(accessToken, function(err, profile) {
         if (profile) {
           setUserProfile(profile);
         }
